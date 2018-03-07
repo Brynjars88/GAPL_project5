@@ -18,7 +18,6 @@ public class GameTree {
 	private StateMachine machine;
 	private MachineState state;
 	private Move[][] legalMoves = null; // 2d array of legal moves for every role [no. roles][no. legal moves for given role]
-
 	/* Role variables */
 	private List<Role> roles;
 	private Map<Role,Integer> roleIndex = new HashMap<Role,Integer>();
@@ -93,6 +92,23 @@ public class GameTree {
 
 	public int getRoleIndex(Role role) {
 		return roleIndex.get(role).intValue();
+	}
+
+	public int[] getJointMoveIndex(List<Move> jointMove) throws MoveDefinitionException
+	{
+		int[] jointMoveIndex = new int[jointMove.size()];
+		for(Move move : jointMove)
+		{
+			int roleIdx = 0;
+			for(int i = 0; i < legalMoves[roleIdx].length; i++)
+			{
+				if(move == legalMoves[roleIdx][i])
+				{
+					jointMoveIndex[roleIdx] = i;
+				}
+			}
+		}
+		return jointMoveIndex;
 	}
 
 
