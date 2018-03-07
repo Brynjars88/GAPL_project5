@@ -50,6 +50,8 @@ public class GameTree {
 		legalMoves = new Move[nRoles][];
 		Qs = new double[nRoles][];
 		Ns = new int[nRoles][];
+		Qrave = new double[nRoles][];
+		Nrave = new int[nRoles][];
 		Move[] movesArr;
 		for(int i = 0; i < roles.size(); i++) {
 			if(!machine.isTerminal(this.getState())) {
@@ -58,6 +60,8 @@ public class GameTree {
 				legalMoves[i] = movesArr;
 				Qs[i] = new double[movesArr.length];
 				Ns[i] = new int[movesArr.length];
+				Qrave[i] = new double[movesArr.length];
+				Nrave[i] = new int[movesArr.length];
 			}
 		}
 	}
