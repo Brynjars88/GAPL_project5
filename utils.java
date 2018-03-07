@@ -41,7 +41,7 @@ public class utils {
 	 * @throws TransitionDefinitionException
 	 * @throws GoalDefinitionException
 	 */
-	public static Pair<Move,GameTree> MCTS(GameTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C)
+	public static Pair<Move,GameTree> MCTS(GameTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, int k)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
@@ -52,6 +52,7 @@ public class utils {
 			while(!timesUp(timeLimit) && iter <= maxIter) {
 
 				ArrayList<int[]> takenMoves = new ArrayList<>();
+				ArrayList<List<Move>> takenJM = new ArrayList<>();
 				GameTree currentNode = node;
 
 				/* PHASE 1 - SELECTION */
@@ -60,6 +61,7 @@ public class utils {
 				List<Move> jm = jmoves.getValue();
 
 				takenMoves.add(jmIndex);
+				takenJM.add(jm);
 
 				while(currentNode.hasChild(jm)) {
 					currentNode = currentNode.getChild(jm);
@@ -69,6 +71,7 @@ public class utils {
 						jmIndex = jmoves.getKey();
 						jm = jmoves.getValue();
 						takenMoves.add(jmIndex);
+						takenJM.add(jm);
 					}
 
 					timesUp(timeLimit);
@@ -88,7 +91,7 @@ public class utils {
 
 				/* PHASE 4 - BACK-PROPAGATION */
 				timesUp(timeLimit);
-				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves);
+				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves, takenJM, 0, k);
 
 				iter++;
 			}
@@ -235,16 +238,26 @@ public class utils {
 	 * the oldest ancestor node. The last int array are the most recent moves
 	 * taken. This assumes the order of roles is the same as the StateMachine
 	 * would fetch them in.
+	 * @throws MoveDefinitionException
 	 */
-	public static void backPropagate(GameTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList) {
+	public static void backPropagate(GameTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, int k)
+			throws MoveDefinitionException {
 		int[] theMoves = moveList.remove(moveList.size()-1);
+		ArrayList<int[]> raveMoves = new ArrayList<>(); // Indexes to moves to be updated in Qrave
+
+		int[]
+		for(int j = takenJM.size() - 1; j >= takenJM.size() - 1 - popCount; j--) {
+
+			raveMoves.add(t.getJointMoveIndex(takenJM.get(j)));
+		}
+
 		t.incrNoSimulation();
 		for(int i = 0; i < theMoves.length; i++) {
-			t.updateQScore(i, theMoves[i], goalVal[i]);
+			t.updateQScore(i, theMoves[i], goalVal[i], k);
 			t.incrNs(i, theMoves[i]);
 		}
 		if (t.getParent() != null) { // Base case is parent == null, in that case we don't do anything else
-			backPropagate(t.getParent(), machine, goalVal, moveList);
+			backPropagate(t.getParent(), machine, goalVal, moveList, takenJM, ++popCount, k);
 		}
 	}
 
