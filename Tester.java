@@ -24,29 +24,6 @@ public class Tester {
 
 		MachineState init = sm.getInitialState();
 
-		List<List<Move>> jm = sm.getLegalJointMoves(init);
-		//System.out.println("Legal moves: "+jm);
-		//System.out.println("\nNext possible states:");
-		//for(MachineState x : sm.getNextStates(init)){
-		//	System.out.println(x);
-		//}
-
-		//while(!jm.isEmpty())
-		//{
-		//	test.addChild(jm.remove(0));
-		//}
-
-		/*
-		List<Move> jm0 = jm.remove(0);
-		test.addChild(jm0);
-		GameTree child = test.getChild(jm0);
-
-		int idx = child.getRoleIndex(child.getRoles().get(1));
-		System.out.println("Idx: "+idx);
-		*/
-
-		//System.out.println(test.toString());
-
 		long playTime;
 		long maxTime = 10000;
 		long minTime = 100;
@@ -75,7 +52,7 @@ public class Tester {
 
 			System.out.println(treeX.getState().toString());
 
-			p = utils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100, 0);
+			p = utils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
 			treeX = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeX.getLegalMoves()[0]));
@@ -91,12 +68,12 @@ public class Tester {
 				playTime = maxTime;
 			}
 
-			p = utils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100, 0);
+			p = utils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
 			treeO = p.getValue();
 			theJM.add(p.getKey());
-			System.out.println("Legal moves: "+Arrays.toString(treeX.getLegalMoves()[1]));
-			System.out.println("Q scores: "+Arrays.toString(treeX.getAllQScores()[1]));
-			System.out.println("N scores: "+Arrays.toString(treeX.getAllNs()[1]));
+			System.out.println("Legal moves: "+Arrays.toString(treeO.getLegalMoves()[1]));
+			System.out.println("Q scores: "+Arrays.toString(treeO.getAllQScores()[1]));
+			System.out.println("N scores: "+Arrays.toString(treeO.getAllNs()[1]));
 			System.out.println("\n");
 			System.out.println(oplayer.toString()+" does: "+p.getKey().toString());
 			System.out.println("\n");
@@ -115,17 +92,5 @@ public class Tester {
 		List<Integer> g = sm.getGoals(treeX.getState());
 		System.out.println(g.toString());
 
-		/*System.out.println(tree.getNs(0, 0));
-		System.out.println(tree.getNs(0, 1));
-		System.out.println(tree.getNs(0, 2));
-		System.out.println(tree.getNs(0, 3));
-		System.out.println(tree.getNs(0, 4)+"\n");
-		System.out.println(tree.getQScore(0, 0));
-		System.out.println(tree.getQScore(0, 1));
-		System.out.println(tree.getQScore(0, 2));
-		System.out.println(tree.getQScore(0, 3));
-		System.out.println(tree.getQScore(0, 4));
-		System.out.println(p.getKey());
-		System.out.println(sm.getLegalMoves(init, sm.getRoles().get(0)));*/
 	}
 }
