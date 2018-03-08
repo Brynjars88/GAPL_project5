@@ -21,7 +21,7 @@ import javafx.util.Pair;
 
 public class raveGamer extends StateMachineGamer {
 
-	private GameTree myTree;
+	private raveTree myTree;
 	private int steps = Integer.MAX_VALUE;
 
 
@@ -41,15 +41,15 @@ public class raveGamer extends StateMachineGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		StateMachine theMachine = getStateMachine();
 		myTree = createTree();
-		utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
+		raveUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
 	}
 
-	public GameTree createTree() throws MoveDefinitionException
+	public raveTree createTree() throws MoveDefinitionException
 	{
-		return new GameTree(getCurrentState(), null, getStateMachine());
+		return new raveTree(getCurrentState(), null, getStateMachine());
 	}
 
-	public GameTree getmyTree()
+	public raveTree getmyTree()
 	{
 		return myTree;
 	}
@@ -73,10 +73,10 @@ public class raveGamer extends StateMachineGamer {
 			myTree.setParent(null);
 		}
 
-		Pair<Move, GameTree> p;
+		Pair<Move, raveTree> p;
 		// TODO: move the root node here to the child corresponding to jointMove
 		// else we are still in the initial state of the game
-		p = utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
+		p = raveUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
 		// myTree = p.getValue();
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();

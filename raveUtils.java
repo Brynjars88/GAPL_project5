@@ -23,7 +23,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 import javafx.util.Pair;
 
 
-public class utils {
+public class raveUtils {
 
 	/**
 	 * Monte-Carlo Tree Search. Runs until maximum number of iterations are reached
@@ -41,7 +41,7 @@ public class utils {
 	 * @throws TransitionDefinitionException
 	 * @throws GoalDefinitionException
 	 */
-	public static Pair<Move,GameTree> MCTS(GameTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, double k)
+	public static Pair<Move,raveTree> MCTS(raveTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, double k)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class utils {
 
 				ArrayList<int[]> takenMoves = new ArrayList<>();
 				ArrayList<List<Move>> takenJM = new ArrayList<>();
-				GameTree currentNode = node;
+				raveTree currentNode = node;
 
 				/* PHASE 1 - SELECTION */
 				Pair<int[],List<Move>> jmoves = selection(currentNode,C);
@@ -78,8 +78,8 @@ public class utils {
 				}
 
 				/* PHASE 2 - EXPANSION */
-				GameTree child;
-				GameTree rolloutNode = currentNode;
+				raveTree child;
+				raveTree rolloutNode = currentNode;
 				if (!currentNode.isTerminal()) {
 					child = currentNode.getChild(jm);
 					rolloutNode = child;
@@ -96,10 +96,10 @@ public class utils {
 				iter++;
 			}
 		} catch (TimeoutException e) {
-			return new Pair<Move,GameTree>(bestMove(node, roleIndex),node);
+			return new Pair<Move,raveTree>(bestMove(node, roleIndex),node);
 		}
 
-		return new Pair<Move,GameTree>(bestMove(node, roleIndex),node);
+		return new Pair<Move,raveTree>(bestMove(node, roleIndex),node);
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class utils {
 	 * would fetch it
 	 * @return Move object with the highest visit count
 	 */
-	public static Move bestMove(GameTree node, int roleIndex) {
+	public static Move bestMove(raveTree node, int roleIndex) {
 		int mostVisits = 0;
 		int idx = 0;
 
@@ -154,7 +154,7 @@ public class utils {
 	 * role 3 as well as the selected joint move represented by a list of Move
 	 * objects.
 	 */
-	public static Pair<int[],List<Move>> selection(GameTree currentNode, double C) {
+	public static Pair<int[],List<Move>> selection(raveTree currentNode, double C) {
 		int nRoles = currentNode.getNoRoles();
 		int[] jmIndex = new int[nRoles];
 		for (int i = 0; i < nRoles; i++) {
@@ -239,7 +239,7 @@ public class utils {
 	 * would fetch them in.
 	 * @throws MoveDefinitionException
 	 */
-	public static void backPropagate(GameTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, double k)
+	public static void backPropagate(raveTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, double k)
 			throws MoveDefinitionException {
 		int[] theMoves = moveList.remove(moveList.size()-1);
 		ArrayList<int[]> raveMoves = new ArrayList<>(); // Indexes to moves to be updated in Qrave

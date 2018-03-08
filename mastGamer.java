@@ -1,6 +1,7 @@
 package GAPL_project4;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
@@ -18,16 +19,16 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 import javafx.util.Pair;
 
 
-public class mtcsGamer2 extends StateMachineGamer {
+public class mastGamer extends StateMachineGamer {
 
-	private GameTree myTree;
+	private mastTree myTree;
 	private int steps = Integer.MAX_VALUE;
 
 
 
 	@Override
 	public String getName() {
-		return "mtcsGamer2";
+		return "mastGamer";
 	}
 
 	@Override
@@ -40,15 +41,15 @@ public class mtcsGamer2 extends StateMachineGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		StateMachine theMachine = getStateMachine();
 		myTree = createTree();
-		utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
+		mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
 	}
 
-	public GameTree createTree() throws MoveDefinitionException
+	public mastTree createTree() throws MoveDefinitionException
 	{
-		return new GameTree(getCurrentState(), null, getStateMachine());
+		return new mastTree(getCurrentState(), null, getStateMachine());
 	}
 
-	public GameTree getmyTree()
+	public mastTree getmyTree()
 	{
 		return myTree;
 	}
@@ -72,13 +73,19 @@ public class mtcsGamer2 extends StateMachineGamer {
 			myTree.setParent(null);
 		}
 
-		Pair<Move, GameTree> p;
+		Pair<Move, mastTree> p;
 		// TODO: move the root node here to the child corresponding to jointMove
 		// else we are still in the initial state of the game
-		p = utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
+		p = mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
 		// myTree = p.getValue();
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();
+
+		System.out.println("Legal moves: "+ Arrays.toString(myTree.getLegalMoves()[0]));
+		System.out.println("Q scores: "+Arrays.toString(myTree.getAllQScores()[0]));
+		System.out.println("N scores: "+Arrays.toString(myTree.getAllNs()[0]));
+		//System.out.println("Qrave scores: "+Arrays.toString(myTree.getAllQrave()[0]));
+		//System.out.println("Nrave scores: "+Arrays.toString(myTree.getAllNrave()[0]));
 
 		return myMove;
 	}
