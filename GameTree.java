@@ -153,7 +153,7 @@ public class GameTree {
 		return Qs[role][move];
 	}
 
-	public void updateQScore(int role, int move, double val, int k) {
+	public void updateQScore(int role, int move, double val, double k) {
 		double beta = Math.sqrt(k/(3*N + k));
 		Qs[role][move] = beta*Qrave[role][move] + (1 - beta)*Qs[role][move];
 	}

@@ -41,7 +41,7 @@ public class utils {
 	 * @throws TransitionDefinitionException
 	 * @throws GoalDefinitionException
 	 */
-	public static Pair<Move,GameTree> MCTS(GameTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, int k)
+	public static Pair<Move,GameTree> MCTS(GameTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, double k)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
@@ -239,7 +239,7 @@ public class utils {
 	 * would fetch them in.
 	 * @throws MoveDefinitionException
 	 */
-	public static void backPropagate(GameTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, int k)
+	public static void backPropagate(GameTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, double k)
 			throws MoveDefinitionException {
 		int[] theMoves = moveList.remove(moveList.size()-1);
 		ArrayList<int[]> raveMoves = new ArrayList<>(); // Indexes to moves to be updated in Qrave
