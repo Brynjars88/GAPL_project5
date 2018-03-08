@@ -18,7 +18,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 import javafx.util.Pair;
 
 
-public class mtcsGamer extends StateMachineGamer {
+public class raveGamer extends StateMachineGamer {
 
 	private GameTree myTree;
 	private int steps = Integer.MAX_VALUE;
@@ -27,7 +27,7 @@ public class mtcsGamer extends StateMachineGamer {
 
 	@Override
 	public String getName() {
-		return "mtcsGamer";
+		return "raveGamer";
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class mtcsGamer extends StateMachineGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		StateMachine theMachine = getStateMachine();
 		myTree = createTree();
-		utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
+		utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50,500);
 	}
 
 	public GameTree createTree() throws MoveDefinitionException
@@ -75,7 +75,7 @@ public class mtcsGamer extends StateMachineGamer {
 		Pair<Move, GameTree> p;
 		// TODO: move the root node here to the child corresponding to jointMove
 		// else we are still in the initial state of the game
-		p = utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
+		p = utils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
 		// myTree = p.getValue();
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();

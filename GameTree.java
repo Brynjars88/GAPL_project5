@@ -102,9 +102,9 @@ public class GameTree {
 	public int[] getJointMoveIndex(List<Move> jointMove) throws MoveDefinitionException
 	{
 		int[] jointMoveIndex = new int[jointMove.size()];
+		int roleIdx = 0;
 		for(Move move : jointMove)
 		{
-			int roleIdx = 0;
 			boolean foundMove = false;
 			for(int i = 0; i < legalMoves[roleIdx].length; i++)
 			{
