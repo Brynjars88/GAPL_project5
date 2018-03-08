@@ -46,14 +46,10 @@ public class Tester {
 		*/
 
 		//System.out.println(test.toString());
-		Role role = sm.getRoles().get(0);
 
-		int xWin = 0;
-		int oWin = 0;
-
-		int fullTime = 5000;
-		int noop = 100;
-		int playTime;
+		long playTime;
+		long maxTime = 10000;
+		long minTime = 100;
 
 		GameTree treeX = new GameTree(init, null, sm);
 		GameTree treeO = new GameTree(init, null, sm);
@@ -66,45 +62,44 @@ public class Tester {
 
 		boolean xPlaying = true;
 
-		Move xmove;
-		Move omove;
-
 		List<Move> theJM;
 
 		while(!sm.isTerminal(treeX.getState())) {
 			theJM = new ArrayList<>();
 
 			if(xPlaying) {
-				playTime = fullTime;
+				playTime = maxTime;
 			} else {
-				playTime = noop;
+				playTime = minTime;
 			}
 
 			System.out.println(treeX.getState().toString());
 
-			p = utils.MCTS(treeX, sm, xplayer, maxIter, playTime, 100);
+			p = utils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100, 0);
 			treeX = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeX.getLegalMoves()[0]));
 			System.out.println("Q scores: "+Arrays.toString(treeX.getAllQScores()[0]));
 			System.out.println("N scores: "+Arrays.toString(treeX.getAllNs()[0]));
-
+			System.out.println("\n");
 			System.out.println(xplayer.toString()+" does: "+p.getKey().toString());
+			System.out.println("\n");
 
 			if(xPlaying) {
-				playTime = noop;
+				playTime = minTime;
 			} else {
-				playTime = fullTime;
+				playTime = maxTime;
 			}
 
-			p = utils.MCTS(treeO, sm, oplayer, maxIter, playTime, 1000);
+			p = utils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100, 0);
 			treeO = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeX.getLegalMoves()[1]));
 			System.out.println("Q scores: "+Arrays.toString(treeX.getAllQScores()[1]));
 			System.out.println("N scores: "+Arrays.toString(treeX.getAllNs()[1]));
-
+			System.out.println("\n");
 			System.out.println(oplayer.toString()+" does: "+p.getKey().toString());
+			System.out.println("\n");
 
 			xPlaying = !xPlaying;
 
