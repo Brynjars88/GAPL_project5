@@ -131,7 +131,6 @@ public class utils {
 	/**
 	 * Measures the time from start and throws an exception if it exceeds the
 	 * time limit.
-	 * @param start - start time in milliseconds
 	 * @param timeLimit - maximum time in milliseconds
 	 * @return false if current time has not exceeded timeLimit
 	 * @throws TimeoutException
@@ -245,10 +244,25 @@ public class utils {
 		int[] theMoves = moveList.remove(moveList.size()-1);
 		ArrayList<int[]> raveMoves = new ArrayList<>(); // Indexes to moves to be updated in Qrave
 
-		int[]
+		int[] movarr;
+		/* Iterates through the list takenJM from the last element down to size - 1 - popCount.
+		This is the order in which actions were taken backwards. In the current state we look
+		at all moves that were taken below that node and see if that node has any children with
+		those moves. If so we update the Qrave and Nrave values for them (not in this loop though).
+		*/
 		for(int j = takenJM.size() - 1; j >= takenJM.size() - 1 - popCount; j--) {
+			if(t.hasChild(takenJM.get(j))) {
+				movarr = t.getJointMoveIndex(takenJM.get(j));
+				if(!raveMoves.contains(movarr))	raveMoves.add(movarr); // TODO: Does contain() really work here?
+			}
+		}
 
-			raveMoves.add(t.getJointMoveIndex(takenJM.get(j)));
+		// Update Qrave and Nrave
+		for(int[] move : raveMoves) {
+			for(int role = 0; role < move.length; role++) {
+				t.updateQrave(role, move[role], goalVal[role]);
+				t.incrNrave(role, move[role]);
+			}
 		}
 
 		t.incrNoSimulation();

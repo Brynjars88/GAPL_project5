@@ -18,6 +18,7 @@ public class GameTree {
 	private StateMachine machine;
 	private MachineState state;
 	private Move[][] legalMoves = null; // 2d array of legal moves for every role [no. roles][no. legal moves for given role]
+
 	/* Role variables */
 	private List<Role> roles;
 	private Map<Role,Integer> roleIndex = new HashMap<Role,Integer>();
@@ -104,13 +105,17 @@ public class GameTree {
 		for(Move move : jointMove)
 		{
 			int roleIdx = 0;
+			boolean foundMove = false;
 			for(int i = 0; i < legalMoves[roleIdx].length; i++)
 			{
-				if(move == legalMoves[roleIdx][i])
+				if(move.equals(legalMoves[roleIdx][i]))
 				{
+					foundMove = true;
 					jointMoveIndex[roleIdx] = i;
 				}
 			}
+			if(!foundMove) return null;
+			roleIdx++;
 		}
 		return jointMoveIndex;
 	}
