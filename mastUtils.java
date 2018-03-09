@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
@@ -41,7 +42,14 @@ public class mastUtils {
 	 * @throws TransitionDefinitionException
 	 * @throws GoalDefinitionException
 	 */
-	public static Pair<Move,mastTree> MCTS(mastTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C)
+	public static Pair<Move,mastTree> MCTS(
+			mastTree node,
+			StateMachine machine,
+			Role role, int maxIter,
+			long timeLimit,
+			Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast,
+			double tau,
+			double C)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
@@ -87,11 +95,11 @@ public class mastUtils {
 
 				/* PHASE 3 - PLAYOUT */
 				timesUp(timeLimit);
-				double[] goalValues = rollout(rolloutNode.getState(), machine);
+				double[] goalValues = rollout(rolloutNode.getState(), machine, Qmast, tau);
 
 				/* PHASE 4 - BACK-PROPAGATION */
 				timesUp(timeLimit);
-				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves);
+				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves, takenJM, Qmast);
 
 				iter++;
 			}
@@ -203,21 +211,63 @@ public class mastUtils {
 	 * @throws MoveDefinitionException
 	 * @throws TransitionDefinitionException
 	 */
-	public static double[] rollout(MachineState ms, StateMachine machine)
+	public static double[] rollout(MachineState ms, StateMachine machine, Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, double tau)
 			throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+		List<Role> roles = machine.getRoles();
 		if (machine.isTerminal(ms)) { // Base case
-			List<Role> roles = machine.getRoles();
 			double[] goalValues = new double[roles.size()];
 			for(int i = 0; i < roles.size(); i++) {
 				goalValues[i] = (double) machine.getGoal(ms, roles.get(i));
 			}
 			return goalValues;
 		}else{ // Recursion
-			List<Move> randMove = machine.getRandomJointMove(ms);
-			MachineState randChild = machine.getNextState(ms, randMove);
-			return rollout(randChild, machine);
+			ArrayList<Move> jointMove = new ArrayList<>();
+			List<Move> legalMoves;
+			for(int i = 0; i < roles.size(); i++) {
+				legalMoves = machine.getLegalMoves(ms, roles.get(i));
+				double[] pdf = gibbspdf(legalMoves, Qmast, (Integer) i, tau);
+				jointMove.add(getRandMove(pdf, legalMoves));
+			}
+			MachineState randChild = machine.getNextState(ms, jointMove);
+			return rollout(randChild, machine, Qmast, tau);
 		}
 	}
+
+
+	public static double[] gibbspdf(List<Move> moves, Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, Integer role, double tau) {
+		double[] pdf = new double[moves.size()];
+		double sum = 0;
+		double qa;
+		// Sum up the divisor
+		for(int i = 0; i < moves.size(); i++) {
+			qa = (double) Qmast.get(new Pair<>(role, moves.get(i))).getKey();
+			sum += Math.exp(qa/tau);
+		}
+		// Calculate probabilities for each action
+		for(int i = 0; i < moves.size(); i++) {
+			qa = (double) Qmast.get(new Pair<>(role, moves.get(i))).getKey();
+			pdf[i] = Math.exp(qa/tau)/sum;
+		}
+		return pdf;
+	}
+
+	public static Move getRandMove(double[] pdf, List<Move> moves) {
+		Random rand = new Random();
+		double randf =  rand.nextDouble();
+		double min = Double.MIN_VALUE;
+		double max = pdf[0];
+
+		for(int i = 0; i < moves.size(); i++) {
+			if(randf > min && randf <= max) {
+				return moves.get(i);
+			} else {
+				min = max;
+				max += pdf[i+1];
+			}
+		}
+		return moves.get(moves.size()-1);
+	}
+
 
 	/**
 	 * After rollout/simulation from a chosen node/GameTree/state all ancestor
@@ -239,9 +289,12 @@ public class mastUtils {
 	 * would fetch them in.
 	 * @throws MoveDefinitionException
 	 */
-	public static void backPropagate(mastTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList)
+	public static void backPropagate(mastTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast)
 			throws MoveDefinitionException {
 		int[] theMoves = moveList.remove(moveList.size()-1);
+		List<Move> jointMove = takenJM.remove(takenJM.size()-1);
+
+		updateQmast(Qmast, jointMove, goalVal);
 
 		t.incrNoSimulation();
 		for(int i = 0; i < theMoves.length; i++) {
@@ -249,30 +302,21 @@ public class mastUtils {
 			t.incrNs(i, theMoves[i]);
 		}
 		if (t.getParent() != null) { // Base case is parent == null, in that case we don't do anything else
-			backPropagate(t.getParent(), machine, goalVal, moveList);
+			backPropagate(t.getParent(), machine, goalVal, moveList, takenJM, Qmast);
 		}
 	}
 
-	/**
-	 * Creates an array of randomly chosen Move action for every role, in
-	 * conjunction these represent a joint Move.
-	 * @param legalMoves - Move[][] array, rows are Move[] arrays which contain
-	 * the legal moves for the role represented by that row
-	 * @return Array of Move objects for every role. This assumes roles are
-	 * indexed in the same order as a StateMachine would fetch them.
-	 */
-	public static Pair<List<Move>,Integer[]> getRandJointMoves(Move[][] legalMoves) {
-		List<Move> jointMove = new ArrayList<>();
-		Integer[] jointMoveIdx = new Integer[legalMoves.length];
-		int noLegalMoves;
-		int randint;
-		for(int i = 0; i < legalMoves.length; i++) {
-			noLegalMoves = legalMoves[i].length;
-			randint = (new Random()).nextInt(noLegalMoves);
-			jointMoveIdx[i] = (Integer) randint;
-			jointMove.add(legalMoves[i][randint]);
+	public static void updateQmast(Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, List<Move> jointMove, double[] goalVal) {
+		double q;
+		double n;
+		int nint;
+		for(int i = 0; i < goalVal.length; i++) {
+			q = Qmast.get(new Pair<>((Integer) i, jointMove.get(i))).getKey();
+			n = (double) Qmast.get(new Pair<>((Integer) i, jointMove.get(i))).getValue();
+			q = q + (goalVal[i] - q)/(n+1);
+			nint = (int) ++n;
+			Qmast.put(new Pair<>((Integer) i, jointMove.get(i)), new Pair<>((Double) q, (Integer) nint));
 		}
-		return new Pair<List<Move>,Integer[]>(jointMove,jointMoveIdx);
 	}
 
 	/**
