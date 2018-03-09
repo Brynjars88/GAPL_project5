@@ -20,7 +20,7 @@ public class Tester {
 	public static void main(String[] args) throws IOException, MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
 
 		String prefix = System.getProperty("user.dir") + "/src/main/java/GAPL_project3/";
-		StateMachine sm = utils.getGameSM(prefix + "tictactoeXwin.txt");
+		StateMachine sm = raveUtils.getGameSM(prefix + "tictactoeXwin.txt");
 
 		MachineState init = sm.getInitialState();
 
@@ -28,12 +28,12 @@ public class Tester {
 		long maxTime = 10000;
 		long minTime = 100;
 
-		GameTree treeX = new GameTree(init, null, sm);
-		GameTree treeO = new GameTree(init, null, sm);
+		raveTree treeX = new raveTree(init, null, sm);
+		raveTree treeO = new raveTree(init, null, sm);
 
 		Role xplayer = treeX.getRoles().get(0);
 		Role oplayer = treeX.getRoles().get(1);
-		Pair<Move,GameTree> p;
+		Pair<Move,raveTree> p;
 
 		int maxIter = Integer.MAX_VALUE;
 
@@ -52,7 +52,7 @@ public class Tester {
 
 			System.out.println(treeX.getState().toString());
 
-			p = utils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
+			p = raveUtils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
 			treeX = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeX.getLegalMoves()[0]));
@@ -68,7 +68,7 @@ public class Tester {
 				playTime = maxTime;
 			}
 
-			p = utils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
+			p = raveUtils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
 			treeO = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeO.getLegalMoves()[1]));
