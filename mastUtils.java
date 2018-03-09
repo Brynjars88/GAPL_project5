@@ -240,7 +240,11 @@ public class mastUtils {
 		double qa;
 		// Sum up the divisor
 		for(int i = 0; i < moves.size(); i++) {
-			qa = (double) Qmast.get(new Pair<>(role, moves.get(i))).getKey();
+			Pair<Integer,Move> p = new Pair<>(role, moves.get(i));
+			if(!Qmast.containsKey(p)) {
+				Qmast.put(p, new Pair<>(0.0,0));
+			}
+			qa = (double) Qmast.get(p).getKey();
 			sum += Math.exp(qa/tau);
 		}
 		// Calculate probabilities for each action
@@ -311,11 +315,15 @@ public class mastUtils {
 		double n;
 		int nint;
 		for(int i = 0; i < goalVal.length; i++) {
-			q = Qmast.get(new Pair<>((Integer) i, jointMove.get(i))).getKey();
-			n = (double) Qmast.get(new Pair<>((Integer) i, jointMove.get(i))).getValue();
+			Pair<Integer,Move> p = new Pair<>((Integer) i, jointMove.get(i));
+			if(!Qmast.containsKey(p)) {
+				Qmast.put(p, new Pair<>(0.0,0));
+			}
+			q = Qmast.get(p).getKey();
+			n = (double) Qmast.get(p).getValue();
 			q = q + (goalVal[i] - q)/(n+1);
 			nint = (int) ++n;
-			Qmast.put(new Pair<>((Integer) i, jointMove.get(i)), new Pair<>((Double) q, (Integer) nint));
+			Qmast.put(p, new Pair<>((Double) q, (Integer) nint));
 		}
 	}
 
