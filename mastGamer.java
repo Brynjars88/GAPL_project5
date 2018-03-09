@@ -2,7 +2,9 @@ package GAPL_project4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
@@ -23,8 +25,7 @@ public class mastGamer extends StateMachineGamer {
 
 	private mastTree myTree;
 	private int steps = Integer.MAX_VALUE;
-
-
+	private Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast = new HashMap<Pair<Integer,Move>,Pair<Double,Integer>>();
 
 	@Override
 	public String getName() {
@@ -41,7 +42,7 @@ public class mastGamer extends StateMachineGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		StateMachine theMachine = getStateMachine();
 		myTree = createTree();
-		mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
+		mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, Qmast, 10, 50);
 	}
 
 	public mastTree createTree() throws MoveDefinitionException
@@ -76,7 +77,7 @@ public class mastGamer extends StateMachineGamer {
 		Pair<Move, mastTree> p;
 		// TODO: move the root node here to the child corresponding to jointMove
 		// else we are still in the initial state of the game
-		p = mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
+		p = mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, Qmast, 10, 50);
 		// myTree = p.getValue();
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();
@@ -84,8 +85,6 @@ public class mastGamer extends StateMachineGamer {
 		System.out.println("Legal moves: "+ Arrays.toString(myTree.getLegalMoves()[0]));
 		System.out.println("Q scores: "+Arrays.toString(myTree.getAllQScores()[0]));
 		System.out.println("N scores: "+Arrays.toString(myTree.getAllNs()[0]));
-		//System.out.println("Qrave scores: "+Arrays.toString(myTree.getAllQrave()[0]));
-		//System.out.println("Nrave scores: "+Arrays.toString(myTree.getAllNrave()[0]));
 
 		return myMove;
 	}
