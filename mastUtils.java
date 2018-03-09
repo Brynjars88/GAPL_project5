@@ -41,7 +41,7 @@ public class mastUtils {
 	 * @throws TransitionDefinitionException
 	 * @throws GoalDefinitionException
 	 */
-	public static Pair<Move,mastTree> MCTS(mastTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, double k)
+	public static Pair<Move,mastTree> MCTS(mastTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
@@ -91,7 +91,7 @@ public class mastUtils {
 
 				/* PHASE 4 - BACK-PROPAGATION */
 				timesUp(timeLimit);
-				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves, takenJM, 0, k);
+				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves);
 
 				iter++;
 			}
@@ -239,39 +239,17 @@ public class mastUtils {
 	 * would fetch them in.
 	 * @throws MoveDefinitionException
 	 */
-	public static void backPropagate(mastTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, double k)
+	public static void backPropagate(mastTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList)
 			throws MoveDefinitionException {
 		int[] theMoves = moveList.remove(moveList.size()-1);
-		ArrayList<int[]> raveMoves = new ArrayList<>(); // Indexes to moves to be updated in Qrave
-
-		int[] movarr;
-		/* Iterates through the list takenJM from the last element down to size - 1 - popCount.
-		This is the order in which actions were taken backwards. In the current state we look
-		at all moves that were taken below that node and see if that node has any children with
-		those moves. If so we update the Qrave and Nrave values for them (not in this loop though).
-		*/
-		for(int j = takenJM.size() - 1; j >= takenJM.size() - 1 - popCount; j--) {
-			if(t.hasChild(takenJM.get(j))) {
-				movarr = t.getJointMoveIndex(takenJM.get(j));
-				if(!raveMoves.contains(movarr))	raveMoves.add(movarr); // TODO: Does contain() really work here?
-			}
-		}
-
-		// Update Qrave and Nrave
-		for(int[] move : raveMoves) {
-			for(int role = 0; role < move.length; role++) {
-				t.updateQrave(role, move[role], goalVal[role]);
-				t.incrNrave(role, move[role]);
-			}
-		}
 
 		t.incrNoSimulation();
 		for(int i = 0; i < theMoves.length; i++) {
-			t.updateQScore(i, theMoves[i], goalVal[i], k);
+			t.updateQScore(i, theMoves[i], goalVal[i]);
 			t.incrNs(i, theMoves[i]);
 		}
 		if (t.getParent() != null) { // Base case is parent == null, in that case we don't do anything else
-			backPropagate(t.getParent(), machine, goalVal, moveList, takenJM, ++popCount, k);
+			backPropagate(t.getParent(), machine, goalVal, moveList);
 		}
 	}
 

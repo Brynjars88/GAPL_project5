@@ -29,9 +29,7 @@ public class mastTree {
 
 	/* Q scores, child and self visit counter*/
 	private double[][] Qs = null; // 2d array of Q values for each role for each move
-	private double[][] Qrave = null;
 	private int[][] Ns = null; // Counts how many times each child state has been visited
-	private int[][] Nrave = null;
 	private int N = 0;
 
 	public mastTree(MachineState state, mastTree parent, StateMachine sm) throws MoveDefinitionException {
@@ -51,8 +49,6 @@ public class mastTree {
 		legalMoves = new Move[nRoles][];
 		Qs = new double[nRoles][];
 		Ns = new int[nRoles][];
-		Qrave = new double[nRoles][];
-		Nrave = new int[nRoles][];
 		Move[] movesArr;
 		for(int i = 0; i < roles.size(); i++) {
 			if(!machine.isTerminal(this.getState())) {
@@ -61,8 +57,6 @@ public class mastTree {
 				legalMoves[i] = movesArr;
 				Qs[i] = new double[movesArr.length];
 				Ns[i] = new int[movesArr.length];
-				Qrave[i] = new double[movesArr.length];
-				Nrave[i] = new int[movesArr.length];
 			}
 		}
 	}
@@ -153,21 +147,8 @@ public class mastTree {
 		return Qs[role][move];
 	}
 
-	public void updateQScore(int role, int move, double val, double k) {
-		double beta = Math.sqrt(k/(3*N + k));
-		Qs[role][move] = beta*Qrave[role][move] + (1 - beta)*Qs[role][move];
-	}
-
-	public double[][] getAllQrave() {
-		return Qrave;
-	}
-
-	public double getQrave(int role, int move) {
-		return Qrave[role][move];
-	}
-
-	public void updateQrave(int role, int move, double val) {
-		Qrave[role][move] += (val - Qrave[role][move])/((double) Nrave[role][move] + 1);
+	public void updateQScore(int role, int move, double val) {
+		Qs[role][move] += (val - Qs[role][move])/((double) Ns[role][move] + 1);
 	}
 
 	public int[][] getAllNs() {
@@ -182,17 +163,6 @@ public class mastTree {
 		Ns[role][move] += 1;
 	}
 
-	public int[][] getAllNrave() {
-		return Nrave;
-	}
-
-	public int getNrave(int role, int move) {
-		return Nrave[role][move];
-	}
-
-	public void incrNrave(int role, int move) {
-		Nrave[role][move] += 1;
-	}
 
 	public int getNoSimulation() {
 		return N;

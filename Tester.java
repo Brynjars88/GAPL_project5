@@ -28,12 +28,12 @@ public class Tester {
 		long maxTime = 10000;
 		long minTime = 100;
 
-		raveTree treeX = new raveTree(init, null, sm);
-		raveTree treeO = new raveTree(init, null, sm);
+		mastTree treeX = new mastTree(init, null, sm);
+		mastTree treeO = new mastTree(init, null, sm);
 
 		Role xplayer = treeX.getRoles().get(0);
 		Role oplayer = treeX.getRoles().get(1);
-		Pair<Move,raveTree> p;
+		Pair<Move,mastTree> p;
 
 		int maxIter = Integer.MAX_VALUE;
 
@@ -52,7 +52,7 @@ public class Tester {
 
 			System.out.println(treeX.getState().toString());
 
-			p = raveUtils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
+			p = mastUtils.MCTS(treeX, sm, xplayer, maxIter, System.currentTimeMillis() + playTime, 100);
 			treeX = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeX.getLegalMoves()[0]));
@@ -68,7 +68,7 @@ public class Tester {
 				playTime = maxTime;
 			}
 
-			p = raveUtils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100, 500);
+			p = mastUtils.MCTS(treeO, sm, oplayer, maxIter, System.currentTimeMillis() + playTime, 100);
 			treeO = p.getValue();
 			theJM.add(p.getKey());
 			System.out.println("Legal moves: "+Arrays.toString(treeO.getLegalMoves()[1]));

@@ -41,7 +41,7 @@ public class mastGamer extends StateMachineGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		StateMachine theMachine = getStateMachine();
 		myTree = createTree();
-		mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
+		mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
 	}
 
 	public mastTree createTree() throws MoveDefinitionException
@@ -76,7 +76,7 @@ public class mastGamer extends StateMachineGamer {
 		Pair<Move, mastTree> p;
 		// TODO: move the root node here to the child corresponding to jointMove
 		// else we are still in the initial state of the game
-		p = mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
+		p = mastUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50);
 		// myTree = p.getValue();
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();
