@@ -1,4 +1,4 @@
-package GAPL_project4;
+package GAPL_project5;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
@@ -23,7 +24,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 import javafx.util.Pair;
 
 
-public class raveUtils {
+public class RMUtils {
 
 	/**
 	 * Monte-Carlo Tree Search. Runs until maximum number of iterations are reached
@@ -41,7 +42,15 @@ public class raveUtils {
 	 * @throws TransitionDefinitionException
 	 * @throws GoalDefinitionException
 	 */
-	public static Pair<Move,raveTree> MCTS(raveTree node, StateMachine machine, Role role, int maxIter, long timeLimit, double C, double k)
+	public static Pair<Move,RMTree> MCTS(
+			RMTree node,
+			StateMachine machine,
+			Role role, int maxIter,
+			Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast,
+			long timeLimit,
+			double C,
+			double tau,
+			double k)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
@@ -53,7 +62,7 @@ public class raveUtils {
 
 				ArrayList<int[]> takenMoves = new ArrayList<>();
 				ArrayList<List<Move>> takenJM = new ArrayList<>();
-				raveTree currentNode = node;
+				RMTree currentNode = node;
 
 				/* PHASE 1 - SELECTION */
 				Pair<int[],List<Move>> jmoves = selection(currentNode,C);
@@ -78,8 +87,8 @@ public class raveUtils {
 				}
 
 				/* PHASE 2 - EXPANSION */
-				raveTree child;
-				raveTree rolloutNode = currentNode;
+				RMTree child;
+				RMTree rolloutNode = currentNode;
 				if (!currentNode.isTerminal()) {
 					child = currentNode.getChild(jm);
 					rolloutNode = child;
@@ -87,19 +96,19 @@ public class raveUtils {
 
 				/* PHASE 3 - PLAYOUT */
 				timesUp(timeLimit);
-				double[] goalValues = rollout(rolloutNode.getState(), machine);
+				double[] goalValues = rollout(rolloutNode.getState(), machine, Qmast, tau);
 
 				/* PHASE 4 - BACK-PROPAGATION */
 				timesUp(timeLimit);
-				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves, takenJM, 0, k);
+				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves, takenJM, 0, k, Qmast);
 
 				iter++;
 			}
 		} catch (TimeoutException e) {
-			return new Pair<Move,raveTree>(bestMove(node, roleIndex),node);
+			return new Pair<Move,RMTree>(bestMove(node, roleIndex),node);
 		}
 
-		return new Pair<Move,raveTree>(bestMove(node, roleIndex),node);
+		return new Pair<Move,RMTree>(bestMove(node, roleIndex),node);
 	}
 
 	/**
@@ -112,7 +121,7 @@ public class raveUtils {
 	 * would fetch it
 	 * @return Move object with the highest visit count
 	 */
-	public static Move bestMove(raveTree node, int roleIndex) {
+	public static Move bestMove(RMTree node, int roleIndex) {
 		int mostVisits = 0;
 		int idx = 0;
 
@@ -154,7 +163,7 @@ public class raveUtils {
 	 * role 3 as well as the selected joint move represented by a list of Move
 	 * objects.
 	 */
-	public static Pair<int[],List<Move>> selection(raveTree currentNode, double C) {
+	public static Pair<int[],List<Move>> selection(RMTree currentNode, double C) {
 		int nRoles = currentNode.getNoRoles();
 		int[] jmIndex = new int[nRoles];
 		for (int i = 0; i < nRoles; i++) {
@@ -203,20 +212,64 @@ public class raveUtils {
 	 * @throws MoveDefinitionException
 	 * @throws TransitionDefinitionException
 	 */
-	public static double[] rollout(MachineState ms, StateMachine machine)
+	public static double[] rollout(MachineState ms, StateMachine machine, Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, double tau)
 			throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+		List<Role> roles = machine.getRoles();
 		if (machine.isTerminal(ms)) { // Base case
-			List<Role> roles = machine.getRoles();
 			double[] goalValues = new double[roles.size()];
 			for(int i = 0; i < roles.size(); i++) {
 				goalValues[i] = (double) machine.getGoal(ms, roles.get(i));
 			}
 			return goalValues;
 		}else{ // Recursion
-			List<Move> randMove = machine.getRandomJointMove(ms);
-			MachineState randChild = machine.getNextState(ms, randMove);
-			return rollout(randChild, machine);
+			ArrayList<Move> jointMove = new ArrayList<>();
+			List<Move> legalMoves;
+			for(int i = 0; i < roles.size(); i++) {
+				legalMoves = machine.getLegalMoves(ms, roles.get(i));
+				double[] pdf = gibbspdf(legalMoves, Qmast, (Integer) i, tau);
+				jointMove.add(getRandMove(pdf, legalMoves));
+			}
+			MachineState randChild = machine.getNextState(ms, jointMove);
+			return rollout(randChild, machine, Qmast, tau);
 		}
+	}
+
+	public static double[] gibbspdf(List<Move> moves, Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, Integer role, double tau) {
+		double[] pdf = new double[moves.size()];
+		double sum = 0;
+		double qa;
+		// Sum up the divisor
+		for(int i = 0; i < moves.size(); i++) {
+			Pair<Integer,Move> p = new Pair<>(role, moves.get(i));
+			if(!Qmast.containsKey(p)) {
+				Qmast.put(p, new Pair<>(0.0,0));
+			}
+			qa = (double) Qmast.get(p).getKey();
+			sum += Math.exp(qa/tau);
+		}
+		// Calculate probabilities for each action
+		for(int i = 0; i < moves.size(); i++) {
+			qa = (double) Qmast.get(new Pair<>(role, moves.get(i))).getKey();
+			pdf[i] = Math.exp(qa/tau)/sum;
+		}
+		return pdf;
+	}
+
+	public static Move getRandMove(double[] pdf, List<Move> moves) {
+		Random rand = new Random();
+		double randf =  rand.nextDouble();
+		double min = Double.MIN_VALUE;
+		double max = pdf[0];
+
+		for(int i = 0; i < moves.size(); i++) {
+			if(randf > min && randf <= max) {
+				return moves.get(i);
+			} else {
+				min = max;
+				max += pdf[i+1];
+			}
+		}
+		return moves.get(moves.size()-1);
 	}
 
 	/**
@@ -239,8 +292,17 @@ public class raveUtils {
 	 * would fetch them in.
 	 * @throws MoveDefinitionException
 	 */
-	public static void backPropagate(raveTree t, StateMachine machine, double[] goalVal, ArrayList<int[]> moveList, ArrayList<List<Move>> takenJM, int popCount, double k)
+	public static void backPropagate(
+			RMTree t,
+			StateMachine machine,
+			double[] goalVal,
+			ArrayList<int[]> moveList,
+			ArrayList<List<Move>> takenJM,
+			int popCount,
+			double k,
+			Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast)
 			throws MoveDefinitionException {
+
 		int[] theMoves = moveList.remove(moveList.size()-1);
 		ArrayList<int[]> raveMoves = new ArrayList<>(); // Indexes to moves to be updated in Qrave
 
@@ -253,7 +315,7 @@ public class raveUtils {
 		for(int j = takenJM.size() - 1; j >= takenJM.size() - 1 - popCount; j--) {
 			if(t.hasChild(takenJM.get(j))) {
 				movarr = t.getJointMoveIndex(takenJM.get(j));
-				if(!raveMoves.contains(movarr))	raveMoves.add(movarr); // TODO: Does contain() really work here?
+				if(!raveMoves.contains(movarr))	raveMoves.add(movarr);
 			}
 		}
 
@@ -265,13 +327,33 @@ public class raveUtils {
 			}
 		}
 
+		List<Move> jointMove = takenJM.get(takenJM.size()-1-popCount);
+		updateQmast(Qmast, jointMove, goalVal);
+
 		t.incrNoSimulation();
 		for(int i = 0; i < theMoves.length; i++) {
 			t.updateQScore(i, theMoves[i], goalVal[i], k);
 			t.incrNs(i, theMoves[i]);
 		}
 		if (t.getParent() != null) { // Base case is parent == null, in that case we don't do anything else
-			backPropagate(t.getParent(), machine, goalVal, moveList, takenJM, ++popCount, k);
+			backPropagate(t.getParent(), machine, goalVal, moveList, takenJM, ++popCount, k, Qmast);
+		}
+	}
+
+	public static void updateQmast(Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, List<Move> jointMove, double[] goalVal) {
+		double q;
+		double n;
+		int nint;
+		for(int i = 0; i < goalVal.length; i++) {
+			Pair<Integer,Move> p = new Pair<>((Integer) i, jointMove.get(i));
+			if(!Qmast.containsKey(p)) {
+				Qmast.put(p, new Pair<>(0.0,0));
+			}
+			q = Qmast.get(p).getKey();
+			n = (double) Qmast.get(p).getValue();
+			q = q + (goalVal[i] - q)/(n+1);
+			nint = (int) ++n;
+			Qmast.put(p, new Pair<>((Double) q, (Integer) nint));
 		}
 	}
 
