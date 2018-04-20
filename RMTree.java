@@ -1,4 +1,4 @@
-package GAPL_project4;
+package GAPL_project5;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,9 +12,9 @@ import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public class raveTree {
+public class RMTree {
 
-	private raveTree parent;
+	private RMTree parent;
 	private StateMachine machine;
 	private MachineState state;
 	private Move[][] legalMoves = null; // 2d array of legal moves for every role [no. roles][no. legal moves for given role]
@@ -25,7 +25,7 @@ public class raveTree {
 	private int nRoles;
 
 	/* Children */
-	private Map<List<Move>,raveTree> children = new HashMap<List<Move>,raveTree>();
+	private Map<List<Move>,RMTree> children = new HashMap<List<Move>,RMTree>();
 
 	/* Q scores, child and self visit counter*/
 	private double[][] Qs = null; // 2d array of Q values for each role for each move
@@ -34,7 +34,7 @@ public class raveTree {
 	private int[][] Nrave = null;
 	private int N = 0;
 
-	public raveTree(MachineState state, raveTree parent, StateMachine sm) throws MoveDefinitionException {
+	public RMTree(MachineState state, RMTree parent, StateMachine sm) throws MoveDefinitionException {
 		this.state = state;
 		this.parent = parent;
 		machine = sm;
@@ -67,11 +67,11 @@ public class raveTree {
 		}
 	}
 
-	public raveTree getParent() {
+	public RMTree getParent() {
 		return parent;
 	}
 
-	public void setParent(raveTree p) {
+	public void setParent(RMTree p) {
 		parent = p;
 	}
 
@@ -123,10 +123,10 @@ public class raveTree {
 
 	public void addChild(List<Move> M) throws MoveDefinitionException, TransitionDefinitionException {
 		MachineState childState = machine.getNextState(state, M);
-		children.put(M, new raveTree(childState,this,machine));
+		children.put(M, new RMTree(childState,this,machine));
 	}
 
-	public raveTree getChild(List<Move> M) throws MoveDefinitionException, TransitionDefinitionException {
+	public RMTree getChild(List<Move> M) throws MoveDefinitionException, TransitionDefinitionException {
 		if (children.get(M) == null) {
 			addChild(M);
 		}
@@ -137,12 +137,12 @@ public class raveTree {
 		return (children.get(M) != null);
 	}
 
-	public raveTree[] getChildren() {
-		List<raveTree> arr = new ArrayList<raveTree>();
+	public RMTree[] getChildren() {
+		List<RMTree> arr = new ArrayList<RMTree>();
 		for (List<Move> key : children.keySet()) {
 		    arr.add(children.get(key));
 		}
-		return arr.toArray(new raveTree[arr.size()]);
+		return arr.toArray(new RMTree[arr.size()]);
 	}
 
 	public double[][] getAllQScores() {
@@ -207,7 +207,7 @@ public class raveTree {
 	{
 		String s = "\nCurrent state:\n";
 		s += state.toString() + "\n\nChildren:\n";
-		for(raveTree c : this.getChildren())
+		for(RMTree c : this.getChildren())
 		{
 			s += c.getState().toString() + "\n";
 		}
