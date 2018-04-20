@@ -1,8 +1,10 @@
-package GAPL_project4;
+package GAPL_project5;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
@@ -21,14 +23,14 @@ import javafx.util.Pair;
 
 public class raveGamer extends StateMachineGamer {
 
-	private raveTree myTree;
+	private RMTree myTree;
 	private int steps = Integer.MAX_VALUE;
-
+	private Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast = new HashMap<Pair<Integer,Move>,Pair<Double,Integer>>();
 
 
 	@Override
 	public String getName() {
-		return "raveGamer";
+		return "RMGamer";
 	}
 
 	@Override
@@ -41,15 +43,15 @@ public class raveGamer extends StateMachineGamer {
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		StateMachine theMachine = getStateMachine();
 		myTree = createTree();
-		raveUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
+		RMUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500, Qmast, 10);
 	}
 
-	public raveTree createTree() throws MoveDefinitionException
+	public RMTree createTree() throws MoveDefinitionException
 	{
-		return new raveTree(getCurrentState(), null, getStateMachine());
+		return new RMTree(getCurrentState(), null, getStateMachine());
 	}
 
-	public raveTree getmyTree()
+	public RMTree getmyTree()
 	{
 		return myTree;
 	}
@@ -73,10 +75,10 @@ public class raveGamer extends StateMachineGamer {
 			myTree.setParent(null);
 		}
 
-		Pair<Move, raveTree> p;
+		Pair<Move, RMTree> p;
 		// TODO: move the root node here to the child corresponding to jointMove
 		// else we are still in the initial state of the game
-		p = raveUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500);
+		p = RMUtils.MCTS(myTree, theMachine, getRole(), steps, timeout, 50, 500, Qmast, 10);
 		// myTree = p.getValue();
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();

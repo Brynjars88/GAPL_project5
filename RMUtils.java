@@ -45,12 +45,13 @@ public class RMUtils {
 	public static Pair<Move,RMTree> MCTS(
 			RMTree node,
 			StateMachine machine,
-			Role role, int maxIter,
-			Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast,
+			Role role,
+			int maxIter,
 			long timeLimit,
 			double C,
-			double tau,
-			double k)
+			double k,
+			Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast,
+			double tau)
 			throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException {
 
 		// long start = System.currentTimeMillis();
