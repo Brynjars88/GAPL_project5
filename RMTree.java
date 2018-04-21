@@ -33,6 +33,7 @@ public class RMTree {
 	private int[][] Ns = null; // Counts how many times each child state has been visited
 	private int[][] Nrave = null;
 	private int N = 0;
+	private int iterations = 0;
 
 	public RMTree(MachineState state, RMTree parent, StateMachine sm) throws MoveDefinitionException {
 		this.state = state;
@@ -200,6 +201,16 @@ public class RMTree {
 
 	public void incrNoSimulation() {
 		N++;
+	}
+
+	public int getNoIterations()
+	{
+		return iterations;
+	}
+
+	public void incrNoIterations()
+	{
+		iterations++;
 	}
 
 	@Override

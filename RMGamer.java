@@ -1,7 +1,6 @@
 package GAPL_project5;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +20,12 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 import javafx.util.Pair;
 
 
-public class raveGamer extends StateMachineGamer {
+public class RMGamer extends StateMachineGamer {
 
 	private RMTree myTree;
 	private int steps = Integer.MAX_VALUE;
 	private Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast = new HashMap<Pair<Integer,Move>,Pair<Double,Integer>>();
+	private int iter = 0;
 
 
 	@Override
@@ -83,11 +83,14 @@ public class raveGamer extends StateMachineGamer {
 		// System.out.println(myTree.toString());
 		Move myMove = p.getKey();
 
-		System.out.println("Legal moves: "+ Arrays.toString(myTree.getLegalMoves()[0]));
-		System.out.println("Q scores: "+Arrays.toString(myTree.getAllQScores()[0]));
-		System.out.println("N scores: "+Arrays.toString(myTree.getAllNs()[0]));
-		System.out.println("Qrave scores: "+Arrays.toString(myTree.getAllQrave()[0]));
-		System.out.println("Nrave scores: "+Arrays.toString(myTree.getAllNrave()[0]));
+		// System.out.println("RM Gamer Legal moves: "+ Arrays.toString(myTree.getLegalMoves()[0]));
+		//System.out.println("\n" + "RM Gamer Q scores: "+Arrays.toString(myTree.getAllQScores()[0]));
+		//System.out.println("RM Gamer N scores: "+Arrays.toString(myTree.getAllNs()[0]));
+		//System.out.println("RM Gamer Qrave scores: "+Arrays.toString(myTree.getAllQrave()[0]));
+		//System.out.println("RM Gamer Nrave scores: "+Arrays.toString(myTree.getAllNrave()[0]));
+		//System.out.println("Number of iterations RMGamer: " + myTree.getNoIterations() + "\n");
+		iter += myTree.getNoIterations();
+		System.out.println("Number of iterations RMGamer: " + iter + "\n");
 
 		return myMove;
 	}

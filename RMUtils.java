@@ -102,7 +102,6 @@ public class RMUtils {
 				/* PHASE 4 - BACK-PROPAGATION */
 				timesUp(timeLimit);
 				backPropagate(rolloutNode.getParent(), machine, goalValues, takenMoves, takenJM, 0, k, Qmast);
-
 				iter++;
 			}
 		} catch (TimeoutException e) {
@@ -339,6 +338,8 @@ public class RMUtils {
 		if (t.getParent() != null) { // Base case is parent == null, in that case we don't do anything else
 			backPropagate(t.getParent(), machine, goalVal, moveList, takenJM, ++popCount, k, Qmast);
 		}
+		else
+			t.incrNoIterations();
 	}
 
 	public static void updateQmast(Map<Pair<Integer,Move>,Pair<Double,Integer>> Qmast, List<Move> jointMove, double[] goalVal) {
